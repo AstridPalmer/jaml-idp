@@ -5,11 +5,20 @@ import base64
 import json
 
 from app.mod_jaml.models import Jaml
+from app.mod_providers.models import Provider
 from app.mod_jaml.controllers import mod_jaml
 
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+
+# Configurations
+app.config.from_object('config')
+
+# Define the database object which is imported
+# by modules and controllers
+db = SQLAlchemy(app)
 
 app.register_blueprint(mod_jaml)
 
@@ -48,6 +57,20 @@ class Test_Jaml(unittest.TestCase):
         '''
         Tests the valid Jaml
         '''
+
+        provider = Provider.query.filter_by(client_id='localhost').first()
+
+        # Create test provider
+        if provider is None:
+            provider = Provider(
+                name='localhost',
+                client_id='localhost',
+                assertion_endpoint=app.config['APP_URL'] + '/jaml/consume'
+            )
+
+            db.session.add(provider)
+            db.session.commit()
+        
 
         req = {
             'client_id': 'localhost',
