@@ -26,6 +26,20 @@ db = SQLAlchemy(app)
 
 app.register_blueprint(mod_jaml)
 
+provider = Provider.query.filter_by(client_id='localhost').first()
+
+
+# Create test provider
+if provider is None:
+    provider = Provider(
+        name='localhost',
+        client_id='localhost',
+        assertion_endpoint=app.config['APP_URL'] + '/jaml/consume'
+    )
+
+    db.session.add(provider)
+    db.session.commit()
+
 class Test_Jaml(unittest.TestCase):
 
     def setUp(self):
@@ -63,18 +77,6 @@ class Test_Jaml(unittest.TestCase):
         '''
 
         provider = Provider.query.filter_by(client_id='localhost').first()
-
-        # Create test provider
-        if provider is None:
-            provider = Provider(
-                name='localhost',
-                client_id='localhost',
-                assertion_endpoint=app.config['APP_URL'] + '/jaml/consume'
-            )
-
-            db.session.add(provider)
-            db.session.commit()
-        
 
         req = {
             'client_id': 'localhost',
