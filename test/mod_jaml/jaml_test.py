@@ -1,15 +1,19 @@
+# Import from py lib
 import unittest
 import json
 import datetime
 import base64
 import json
 
+# Import models
 from app.mod_jaml.models import Jaml
 from app.mod_providers.models import Provider
 from app.mod_jaml.controllers import mod_jaml
 
+# Import Flask dependencies
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.contrib.securecookie import SecureCookie
 
 app = Flask(__name__, template_folder='../../app/templates')
 
@@ -110,15 +114,12 @@ class Test_Jaml(unittest.TestCase):
         '''
 
         time = datetime.datetime.utcnow()
-
         self.assertTrue(Jaml.time_in_range(time))
 
         time = datetime.datetime.utcnow() - datetime.timedelta(minutes=3)
-
         self.assertFalse(Jaml.time_in_range(time))
 
         time = datetime.datetime.utcnow() + datetime.timedelta(minutes=3)
-
         self.assertFalse(Jaml.time_in_range(time))
 
     def test_jaml_response(self):
@@ -139,4 +140,52 @@ class Test_Jaml(unittest.TestCase):
         '''
 
         rv = self.app.get('/jaml/')
+        self.assertTrue('500' in rv.status)
+
+        req = {
+            'client_id': 'localhost',
+            'request_instance': str(datetime.datetime.utcnow()),
+            'assertion_endpoint': app.config['APP_URL'] + '/jaml/consume',
+        }
+
+        rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'))
+        self.assertTrue('200' in rv.status)
+
+        user_cookie = str(SecureCookie({ "username": 'test' }, secret_key=app.config['SECRET_KEY']).serialize(), 'utf-8')
+
+        rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'), headers={ 'Cookie': 'user="{}"'.format(user_cookie) })
+        self.assertTrue('200' in rv.status)
+
+        req['request_instance'] = str(datetime.datetime.utcnow() + datetime.timedelta(minutes=10))
+
+        rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'))
+        self.assertTrue('500' in rv.status)
+
+    def test_login(self):
+        '''
+        Tests the login endpoint
+        '''
+
+        rv = self.app.post('/jaml/login')
+        self.assertTrue('500' in rv.status)
+
+        rv = self.app.post('/jaml/login', data=dict(
+            username='test',
+            password='test',
+            client_id='localhost'
+        ))
+        self.assertTrue('200' in rv.status)
+
+        rv = self.app.post('/jaml/login', data=dict(
+            username='test',
+            password='test',
+            client_id='notaprovider'
+        ))
+        self.assertTrue('500' in rv.status)
+
+        rv = self.app.post('/jaml/login', data=dict(
+            username='notavaliduser',
+            password='notavaliduser',
+            client_id='localhost'
+        ))
         self.assertTrue('500' in rv.status)

@@ -26,7 +26,6 @@ def jaml():
     '''
 
     try:
-        
         jaml_req = request.args.get('JAMLRequest')
 
         jaml_dict = Jaml.jaml_request(jaml_req)
@@ -70,7 +69,8 @@ def login():
         raise Exception
     except Exception as e:
         print(e)
-        return render_template('error.html')
+        resp = make_response(render_template('error.html'))
+        return resp, 500
 
 @mod_jaml.route('/initiated', methods=['GET'])
 def initiated():
