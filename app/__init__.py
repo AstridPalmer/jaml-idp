@@ -28,4 +28,3 @@ app.register_blueprint(providers_module)
 
 # Migrate the DB
 db.create_all()
-
