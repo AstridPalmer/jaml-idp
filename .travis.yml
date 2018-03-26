@@ -9,4 +9,4 @@ install:
 script:
   - coverage run --source=app test.py
 after_success:
-  - coveralls
+  - coveralls -i

@@ -28,7 +28,6 @@ app.register_blueprint(mod_jaml)
 
 provider = Provider.query.filter_by(client_id='localhost').first()
 
-
 # Create test provider
 if provider is None:
     provider = Provider(
