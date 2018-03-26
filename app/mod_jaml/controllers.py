@@ -1,5 +1,6 @@
 # Import flask dependencies
 from flask import Blueprint, request, jsonify, Response, redirect, render_template, make_response
+from werkzeug.contrib.securecookie import SecureCookie
 
 # Import app for config
 from app import app
@@ -18,12 +19,24 @@ mod_jaml = Blueprint('jaml', __name__, url_prefix='/jaml')
 
 @mod_jaml.route('/', methods=['GET'])
 def jaml():
+    '''
+    Jaml request endpoint.
+
+    The user will reach this endpoint with a url query specifying the service provider.
+    '''
+
     jaml_req = request.args.get('JAMLRequest')
 
     try:
         jaml_dict = Jaml.jaml_request(jaml_req)
 
         if request.cookies.get('user'):
+
+            user_cookie = SecureCookie.unserialize(request.cookies.get('user'), app.config['SECRET_KEY'])
+
+            if hasattr(user_cookie, 'username') is False:
+                return render_template('error.html')
+
             return render_template('login.html', url=jaml_dict['assertion_endpoint'], JAMLReponse=Jaml.jaml_response(request.cookies.get('user')))
     except TypeError as e:
         print(e)
@@ -36,6 +49,9 @@ def jaml():
 
 @mod_jaml.route('/login', methods=['POST'])
 def login():
+    '''
+
+    '''
 
     try:
         provider = Provider.query.filter_by(client_id=request.form['client_id']).first()
@@ -45,7 +61,9 @@ def login():
 
         if User.login(request.form['username'], request.form['password']):
             resp = make_response(render_template('login.html', url=provider.assertion_endpoint, JAMLReponse=Jaml.jaml_response(request.form['username'])))
-            resp.set_cookie('user', request.form['username'])
+            user_cookie = SecureCookie({ "username": request.form['username'] }, secret_key=app.config['SECRET_KEY'])
+
+            resp.set_cookie('user', str(user_cookie.serialize(), 'utf-8'), expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
             return resp
         
         raise Exception

@@ -11,3 +11,6 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'app.db')
 
 # App URL
 APP_URL = 'http://localhost:5000'
+
+# Secret Key
+SECRET_KEY = 'CSxqRoVlIHcAVXUzMom4tGdAAfCqTk+A'
