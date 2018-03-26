@@ -18,6 +18,3 @@ class Provider(Base):
     name = db.Column(db.String(100), nullable=False)
     client_id = db.Column(db.String(100), nullable=False)
     assertion_endpoint = db.Column(db.String(255), nullable=False)
-
-    def __repr__(self):
-        return '<Provider: {}>'.format(self.name)

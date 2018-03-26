@@ -24,9 +24,6 @@ class Jaml():
 
         try:
             json_request = base64.b64decode(bytes(request_string, 'utf-8'))
-        except UnicodeDecodeError as e: 
-            print(e)
-            raise UnicodeEncodeError
         except TypeError as e:
             print(e)
             raise TypeError
@@ -121,6 +118,13 @@ class User():
         if username == 'test' and password == 'test':
             return True
         else:
+            return False
+
+        @staticmethod
+        def validate_user(username):
+            if username == 'test':
+                return True
+
             return False
         
 

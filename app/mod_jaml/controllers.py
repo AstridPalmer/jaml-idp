@@ -25,32 +25,33 @@ def jaml():
     The user will reach this endpoint with a url query specifying the service provider.
     '''
 
-    jaml_req = request.args.get('JAMLRequest')
-
     try:
+        
+        jaml_req = request.args.get('JAMLRequest')
+
         jaml_dict = Jaml.jaml_request(jaml_req)
 
         if request.cookies.get('user'):
 
             user_cookie = SecureCookie.unserialize(request.cookies.get('user'), app.config['SECRET_KEY'])
 
-            if hasattr(user_cookie, 'username') is False:
-                return render_template('error.html')
+            if 'username' in list(user_cookie.keys()):
+                return render_template('login.html', url=jaml_dict['assertion_endpoint'], JAMLReponse=Jaml.jaml_response(request.cookies.get('user')))
 
-            return render_template('login.html', url=jaml_dict['assertion_endpoint'], JAMLReponse=Jaml.jaml_response(request.cookies.get('user')))
-    except TypeError as e:
+        else:
+            if Jaml.validate_jaml_request(jaml_dict):
+                return render_template('index.html', client_id=jaml_dict['client_id'])
+
+        raise Exception
+    except Exception as e:
         print(e)
-        return render_template('error.html')
-
-    if Jaml.validate_jaml_request(jaml_dict):
-        return render_template('index.html', client_id=jaml_dict['client_id'])
-    else:
-        return render_template('error.html')
+        resp = make_response(render_template('error.html'))
+        return resp, 500
 
 @mod_jaml.route('/login', methods=['POST'])
 def login():
     '''
-
+    Login endpoint
     '''
 
     try:
@@ -88,5 +89,5 @@ def consume():
 
     data = base64.b64decode(data).decode('utf-8')
 
-    return "consume jaml"
+    return render_template('jaml.html')
 

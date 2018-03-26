@@ -11,7 +11,7 @@ from app.mod_jaml.controllers import mod_jaml
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='../../app/templates')
 
 # Configurations
 app.config.from_object('config')
@@ -88,6 +88,22 @@ class Test_Jaml(unittest.TestCase):
 
         self.assertFalse(Jaml.validate_jaml_request(req))
 
+        req = {
+            'client_id': 'notaprovider',
+            'request_instance': str(datetime.datetime.utcnow() - datetime.timedelta(minutes=5)),
+            'assertion_endpoint': 'http://localhost:5000/jaml/consume',
+        }
+
+        self.assertFalse(Jaml.validate_jaml_request(req))
+
+        req = {
+            'client_id': 'localhost',
+            'request_instance': str(datetime.datetime.utcnow() - datetime.timedelta(minutes=5)),
+            'assertion_endpoint': 'http://wrongurl:5000/jaml/consume',
+        }
+
+        self.assertFalse(Jaml.validate_jaml_request(req))
+
     def test_time_in_range(self):
         '''
         Tests the date range function
@@ -98,6 +114,10 @@ class Test_Jaml(unittest.TestCase):
         self.assertTrue(Jaml.time_in_range(time))
 
         time = datetime.datetime.utcnow() - datetime.timedelta(minutes=3)
+
+        self.assertFalse(Jaml.time_in_range(time))
+
+        time = datetime.datetime.utcnow() + datetime.timedelta(minutes=3)
 
         self.assertFalse(Jaml.time_in_range(time))
 
@@ -112,3 +132,11 @@ class Test_Jaml(unittest.TestCase):
 
         self.assertTrue('name_id' in json.loads(base64.b64decode(encoded_response).decode('utf-8')))
         self.assertTrue('response_instance' in json.loads(base64.b64decode(encoded_response).decode('utf-8')))
+
+    def test_jaml_endpoint(self):
+        '''
+        Tests the jaml endpoint
+        '''
+
+        rv = self.app.get('/jaml/')
+        self.assertTrue('500' in rv.status)
