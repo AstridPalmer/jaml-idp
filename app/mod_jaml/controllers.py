@@ -32,10 +32,10 @@ def jaml():
 
         if request.cookies.get('user'):
 
-            user_cookie = SecureCookie.unserialize(request.cookies.get('user'), app.config['SECRET_KEY'])
+            user_cookie = SecureCookie.unserialize(request.cookies.get('jaml--auth-cookie'), app.config['SECRET_KEY'])
 
             if 'username' in list(user_cookie.keys()):
-                return render_template('login.html', url=jaml_dict['assertion_endpoint'], JAMLReponse=Jaml.jaml_response(request.cookies.get('user')))
+                return render_template('login.html', url=jaml_dict['assertion_endpoint'], JAMLReponse=Jaml.jaml_response(request.cookies.get('jaml--auth-cookie')))
 
         else:
             if Jaml.validate_jaml_request(jaml_dict):
@@ -63,7 +63,7 @@ def login():
             resp = make_response(render_template('login.html', url=provider.assertion_endpoint, JAMLReponse=Jaml.jaml_response(request.form['username'])))
             user_cookie = SecureCookie({ "username": request.form['username'] }, secret_key=app.config['SECRET_KEY'])
 
-            resp.set_cookie('user', str(user_cookie.serialize(), 'utf-8'), expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
+            resp.set_cookie('jaml--auth-cookie', str(user_cookie.serialize(), 'utf-8'), expires=datetime.datetime.utcnow() + datetime.timedelta(days=1))
             return resp
         
         raise Exception

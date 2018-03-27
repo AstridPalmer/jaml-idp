@@ -156,7 +156,7 @@ class Test_Jaml(unittest.TestCase):
 
         user_cookie = str(SecureCookie({ "username": 'test' }, secret_key=app.config['SECRET_KEY']).serialize(), 'utf-8')
 
-        rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'), headers={ 'Cookie': 'user="{}"'.format(user_cookie) })
+        rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'), headers={ 'Cookie': 'jaml--auth-cookie="{}"'.format(user_cookie) })
         print(rv.status)
         self.assertTrue('200' in rv.status)
 
