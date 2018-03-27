@@ -141,7 +141,6 @@ class Test_Jaml(unittest.TestCase):
         '''
 
         rv = self.app.get('/jaml/')
-        print(rv.status)
         self.assertTrue('500' in rv.status)
 
         req = {
@@ -151,19 +150,16 @@ class Test_Jaml(unittest.TestCase):
         }
 
         rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'))
-        print(rv.status)
         self.assertTrue('200' in rv.status)
 
         user_cookie = str(SecureCookie({ "username": 'test' }, secret_key=app.config['SECRET_KEY']).serialize(), 'utf-8')
 
         rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'), headers={ 'Cookie': 'jaml-auth-cookie="{}"'.format(user_cookie) })
-        print(rv.status)
         self.assertTrue('200' in rv.status)
 
         req['request_instance'] = str(datetime.datetime.utcnow() + datetime.timedelta(minutes=10))
 
         rv = self.app.get('/jaml/?JAMLRequest=' + base64.b64encode(bytes(json.dumps(req), 'utf-8')).decode('utf-8'))
-        print(rv.status)
         self.assertTrue('500' in rv.status)
 
     def test_login(self):
@@ -172,7 +168,6 @@ class Test_Jaml(unittest.TestCase):
         '''
 
         rv = self.app.post('/jaml/login')
-        print(rv.status)
         self.assertTrue('500' in rv.status)
 
         rv = self.app.post('/jaml/login', data=dict(
@@ -180,7 +175,6 @@ class Test_Jaml(unittest.TestCase):
             password='test',
             client_id='localhost'
         ))
-        print(rv.status)
         self.assertTrue('200' in rv.status)
 
         rv = self.app.post('/jaml/login', data=dict(
@@ -188,7 +182,6 @@ class Test_Jaml(unittest.TestCase):
             password='test',
             client_id='notaprovider'
         ))
-        print(rv.status)
         self.assertTrue('500' in rv.status)
 
         rv = self.app.post('/jaml/login', data=dict(
@@ -196,5 +189,4 @@ class Test_Jaml(unittest.TestCase):
             password='notavaliduser',
             client_id='localhost'
         ))
-        print(rv.status)
         self.assertTrue('500' in rv.status)
